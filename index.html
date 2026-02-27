@@ -30,6 +30,10 @@
 
     <!-- Canonical (защита от дублей) -->
     <link rel="canonical" href="https://n8nstore.example.com/">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
     <!-- Подключаем современные шрифты Inter и Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -338,6 +342,16 @@
             </div>
         </section>
     </template>
+
+    <!-- Cookie Popup -->
+    <div class="cookie-popup hidden" id="cookie-popup">
+        <div class="cookie-content">
+            <p>Мы используем файлы cookie для улучшения работы сайта. Продолжая использовать сайт, вы соглашаетесь с
+                нашей <a href="#" onclick="app.navigate('privacy'); return false;" class="accent">политикой
+                    конфиденциальности</a>.</p>
+            <button class="btn btn-primary btn-glow" id="cookie-accept-btn">Понятно</button>
+        </div>
+    </div>
 
     <!-- Виджет Telegram -->
     <div class="tg-widget-container" id="tg-widget-container">

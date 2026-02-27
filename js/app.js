@@ -43,6 +43,19 @@ const app = {
     }
 
     this.updateCartBadge();
+
+    // Cookie Popup
+    const cookiePopup = document.getElementById('cookie-popup');
+    const cookieAcceptBtn = document.getElementById('cookie-accept-btn');
+    if (cookiePopup && cookieAcceptBtn) {
+      if (!localStorage.getItem('cookies_accepted')) {
+        setTimeout(() => cookiePopup.classList.remove('hidden'), 2000);
+      }
+      cookieAcceptBtn.addEventListener('click', () => {
+        localStorage.setItem('cookies_accepted', 'true');
+        cookiePopup.classList.add('hidden');
+      });
+    }
   },
 
   cacheDOM() {
@@ -124,6 +137,14 @@ const app = {
         this.closeModal();
       }
     });
+  },
+
+  // Глобальный метод для открытия виджета Telegram
+  openTgWidget(e) {
+    if (e) e.preventDefault();
+    if (this.$tgWidgetWindow) {
+      this.$tgWidgetWindow.classList.remove('hidden');
+    }
   },
 
   // Метод навигации

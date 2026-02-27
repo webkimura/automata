@@ -1060,3 +1060,51 @@ a:hover {
 .document-list li {
   margin-bottom: 8px;
 }
+
+/* =========================================
+   Cookie Popup
+   ========================================= */
+.cookie-popup {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 998;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 20px 30px;
+  border-radius: var(--radius-lg);
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  transition: opacity var(--transition-normal), transform var(--transition-normal), visibility var(--transition-normal);
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.cookie-popup.hidden {
+  opacity: 0;
+  transform: translateY(20px);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.cookie-popup p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .cookie-popup {
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    max-width: none;
+  }
+}
