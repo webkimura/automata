@@ -274,7 +274,12 @@ const app = {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json();
+      let data = await response.json();
+
+      // Ensure data is an array
+      if (!Array.isArray(data)) {
+        data = [data];
+      }
 
       state.templates = data;
       this.renderItems(grid, data, 'template');
