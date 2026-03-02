@@ -5,7 +5,7 @@
 
 // URL вебхуков n8n (заменить их на свои)
 const N8N_WEBHOOKS = {
-  templates: 'https://your-n8n-domain.com/webhook/get-templates',
+  templates: 'https://n8n.soedmi.ru/webhook/get-templates',
   news: 'https://your-n8n-domain.com/webhook/get-news',
   guides: 'https://your-n8n-domain.com/webhook/get-guides',
   video: 'https://your-n8n-domain.com/webhook/get-video',
