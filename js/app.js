@@ -268,19 +268,17 @@ const app = {
     if (!grid) return;
 
     try {
-      // В реальной жизни: const response = await fetch(N8N_WEBHOOKS.templates);
       grid.innerHTML = '<div class="loader"><i class="bx bx-loader-alt bx-spin"></i> Загрузка шаблонов...</div>';
 
-      setTimeout(() => {
-        const mockData = [
-          { id: 1, title: 'Telegram Бот + AI', price: '1 500 ₽', desc: 'Готовый бот для поддержки на базе OpenAI. Отвечает по базе знаний.', icon: 'bx-bot' },
-          { id: 2, title: 'Парсер RSS в Telegram', price: '900 ₽', desc: 'Сборщик новостей из RSS-лент с автопубликацией в ваш канал.', icon: 'bx-news' },
-          { id: 3, title: 'Синхронизация Лидов CRM', price: '2 000 ₽', desc: 'Автоматическая передача заявок с сайта прямо в воронку продаж.', icon: 'bx-sync' },
-          { id: 4, title: 'Генератор Отчетов Google Sheets', price: '1 200 ₽', desc: 'Сбор статистики из рекламных кабинетов в удобную таблицу.', icon: 'bx-spreadsheet' }
-        ];
-        state.templates = mockData;
-        this.renderItems(grid, mockData, 'template');
-      }, 800);
+      const response = await fetch(N8N_WEBHOOKS.templates);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+
+      state.templates = data;
+      this.renderItems(grid, data, 'template');
+
     } catch (error) {
       grid.innerHTML = '<div class="loader error">Ошибка при загрузке шаблонов. Проверьте настройки n8n.</div>';
       console.error(error);
