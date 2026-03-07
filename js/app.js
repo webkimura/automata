@@ -10,7 +10,7 @@ const N8N_WEBHOOKS = {
   video: 'https://your-n8n-domain.com/webhook/get-video',
   portfolio: 'https://your-n8n-domain.com/webhook/get-portfolio',
   createPayment: 'https://your-n8n-domain.com/webhook/create-payment',
-  aiChat: 'https://your-n8n-domain.com/webhook/ai-chat' // ЗАМЕНИТЬ ЭТО НА СВОЙ ВЕБХУК
+  aiChat: 'https://n8n.soedmi.ru/webhook/ai-chat' // ЗАМЕНИТЬ НА СВОЙ ВЕБХУК
 };
 
 // Состояние приложения
