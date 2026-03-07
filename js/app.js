@@ -7,10 +7,10 @@
 const N8N_WEBHOOKS = {
   templates: 'https://n8n.soedmi.ru/webhook/get-templates',
   news: 'https://your-n8n-domain.com/webhook/get-news',
-  guides: 'https://your-n8n-domain.com/webhook/get-guides',
   video: 'https://your-n8n-domain.com/webhook/get-video',
+  portfolio: 'https://your-n8n-domain.com/webhook/get-portfolio',
   createPayment: 'https://your-n8n-domain.com/webhook/create-payment',
-  telegramContact: 'https://your-n8n-domain.com/webhook/telegram-contact' // ЗАМЕНИТЕ ЭТО НА СВОЙ ВЕБХУК
+  aiChat: 'https://your-n8n-domain.com/webhook/ai-chat' // ЗАМЕНИТЬ ЭТО НА СВОЙ ВЕБХУК
 };
 
 // Состояние приложения
@@ -18,7 +18,7 @@ const state = {
   currentRoute: 'home',
   cart: [],
   templates: [],
-  articles: []
+  portfolio: []
 };
 
 // Главный контроллер приложения
@@ -31,13 +31,7 @@ const app = {
     // Чтение хэша из URL если есть, иначе открываем главную
     const hash = window.location.hash.replace('#', '');
     if (hash) {
-      if (hash.startsWith('article-')) {
-        const id = parseInt(hash.replace('article-', ''));
-        // Сначала загружаем гайды (чтобы статьи были в state), затем открываем
-        this.loadGuides().then(() => this.openArticle(id));
-      } else {
-        this.navigate(hash);
-      }
+      this.navigate(hash);
     } else {
       this.renderRoute('home');
     }
@@ -73,9 +67,10 @@ const app = {
     this.$tgWidgetBtn = document.getElementById('tg-widget-btn');
     this.$tgWidgetWindow = document.getElementById('tg-widget-window');
     this.$tgWidgetClose = document.getElementById('tg-widget-close');
-    this.$tgWidgetForm = document.getElementById('tg-widget-form');
-    this.$tgWidgetSuccess = document.getElementById('tg-widget-success');
-    this.$tgWidgetError = document.getElementById('tg-widget-error');
+    this.$tgChatForm = document.getElementById('tg-chat-form');
+    this.$tgChatInput = document.getElementById('tg-chat-input');
+    this.$tgChatHistory = document.getElementById('tg-chat-history');
+    this.$tgChatSubmit = document.getElementById('tg-chat-submit');
     this.$footerContactsBtn = document.getElementById('footer-contacts-btn');
   },
 
@@ -119,8 +114,8 @@ const app = {
       }
     }
 
-    if (this.$tgWidgetForm) {
-      this.$tgWidgetForm.addEventListener('submit', (e) => this.handleTgSubmit(e));
+    if (this.$tgChatForm) {
+      this.$tgChatForm.addEventListener('submit', (e) => this.handleChatSubmit(e));
     }
 
     // Модальное окно (закрытие)
@@ -188,7 +183,7 @@ const app = {
       // Если раздел требует загрузки данных - вызываем соответствующий метод
       if (route === 'templates') this.loadTemplates();
       if (route === 'news') this.loadNews();
-      if (route === 'guides') this.loadGuides();
+      if (route === 'portfolio') this.loadPortfolio();
       if (route === 'video') this.loadVideos();
 
       // Обновляем SEO данные
@@ -218,9 +213,9 @@ const app = {
         title: 'Магазин готовых шаблонов n8n | n8nStore',
         desc: 'Скачайте готовые скрипты и шаблоны для n8n: Telegram боты, парсеры, интеграция CRM и выгрузка отчетов.'
       },
-      guides: {
-        title: 'Обучающие статьи и гайды по n8n | n8nStore',
-        desc: 'Изучите базу знаний по работе с n8n, JSON, HTTP запросами и архитектурой автоматизаций.'
+      portfolio: {
+        title: 'Наши кейсы и проекты автоматизации | n8nStore',
+        desc: 'Реализованные проекты по автоматизации бизнеса, интеграции сервисов и разработке ботов.'
       },
       news: {
         title: 'Новости магазина и обновления n8n | n8nStore',
@@ -304,24 +299,51 @@ const app = {
     }, 500);
   },
 
-  async loadGuides() {
-    const list = document.getElementById('guides-list');
-    list.innerHTML = '<div class="loader"><i class="bx bx-loader-alt bx-spin"></i> Подгрузка статей...</div>';
+  async loadPortfolio() {
+    const grid = document.getElementById('portfolio-grid');
+    if (!grid) return;
+    grid.innerHTML = '<div class="loader"><i class="bx bx-loader-alt bx-spin"></i> Подгрузка проектов...</div>';
     setTimeout(() => {
-      const mockGuides = [
+      const mockPortfolio = [
         {
-          id: 201,
-          title: 'Основы работы с JSON для n8n',
-          category: 'Начинающим',
-          readTime: '5 мин',
-          content: '<h3>Что такое JSON?</h3><p>JSON (JavaScript Object Notation) — это простой формат обмена данными, удобный для чтения и записи как человеком, так и компьютером...</p><p>В n8n все данные между узлами (нодами) передаются в формате массива JSON объектов. Если вы поймете этот принцип, автоматизация станет интуитивной.</p>'
+          id: 1,
+          title: 'Telegram-бот для службы поддержки',
+          tag: 'Коммуникации',
+          image: 'https://placehold.co/600x400/222/FFF?text=Support+Bot',
+          desc: 'Автоматизированная система приема обращений с ChatGPT и сохранением в Google Sheets.',
+          features: [
+            'Интеграция с OpenAI',
+            'Синхронизация с базой данных',
+            'Маршрутизация к операторам'
+          ]
         },
-        { id: 202, title: 'Обработка ошибок в тяжелых сценариях', category: 'Продвинутым', readTime: '12 мин', content: '<p>Контент гайда об обработке ошибок...</p>' },
-        { id: 203, title: 'Best Practices архитектуры автоматизации', category: 'Архитектура', readTime: '15 мин', content: '<p>Контент про архитектуру...</p>' },
-        { id: 204, title: 'Гайд: Работа с HTTP Request Node', category: 'Основы', readTime: '8 мин', content: '<p>Контент про HTTP запросы...</p>' }
+        {
+          id: 2,
+          title: 'Автоматизация отдела продаж',
+          tag: 'CRM',
+          image: 'https://placehold.co/600x400/222/FFF?text=Sales+CRM',
+          desc: 'Связка AmoCRM с телефонией и автоматическими рассылками коммерческих предложений.',
+          features: [
+            'Настройка триггерных писем',
+            'Генерация PDF-документов',
+            'Уведомления менеджерам в Slack'
+          ]
+        },
+        {
+          id: 3,
+          title: 'Парсер конкурентов с уведомлениями',
+          tag: 'Данные',
+          image: 'https://placehold.co/600x400/222/FFF?text=Data+Scraper',
+          desc: 'Ежедневный сбор цен с 5 сайтов конкурентов, анализ и сводный отчет в Telegram.',
+          features: [
+            'Обход капчи и Cloudflare',
+            'Сравнение цен в реальном времени',
+            'Форматированный отчет в мессенджер'
+          ]
+        }
       ];
-      state.articles = mockGuides;
-      this.renderItems(list, mockGuides, 'guide');
+      state.portfolio = mockPortfolio;
+      this.renderItems(grid, mockPortfolio, 'portfolio');
     }, 500);
   },
 
@@ -372,18 +394,20 @@ const app = {
             `).join('');
       // wrap with list manually to match older layout
       html = `<div class="news-list">${html}</div>`;
-    } else if (type === 'guide') {
+    } else if (type === 'portfolio') {
       html = items.map(item => `
-                <article class="guide-card glass-panel fade-in">
-                    <div class="guide-meta">
-                        <span class="badge" aria-label="Категория: ${item.category}">${item.category}</span>
-                        <span class="read-time" aria-label="Время чтения: ${item.readTime}"><i class='bx bx-time-five' aria-hidden="true"></i> ${item.readTime}</span>
+                <article class="portfolio-card glass-panel fade-in" onclick="app.openPortfolioModal(${item.id})">
+                    <div class="portfolio-preview">
+                        <img src="${item.image}" alt="Превью ${item.title}">
                     </div>
-                    <h3>${item.title}</h3>
-                    <button class="btn btn-outline" style="margin-top: 15px; width: 100%;" onclick="app.openArticle(${item.id})">Читать статью</button>
+                    <div class="portfolio-info">
+                        <div class="portfolio-meta">
+                            <span class="badge" aria-label="Категория: ${item.tag}">${item.tag}</span>
+                        </div>
+                        <h3>${item.title}</h3>
+                    </div>
                 </article>
             `).join('');
-      // the guide container template has class items-grid so we just drop it in
     } else if (type === 'video') {
       html = items.map(item => `
                 <article class="video-card glass-panel fade-in">
@@ -455,6 +479,33 @@ const app = {
     this.openModal(html);
   },
 
+  openPortfolioModal(id) {
+    const item = state.portfolio.find(p => p.id === id);
+    if (!item) return;
+
+    const listHtml = item.features ? item.features.map(f => `<li><i class='bx bx-check' aria-hidden="true"></i> ${f}</li>`).join('') : '';
+
+    const html = `
+            <div class="portfolio-modal-content">
+                <div class="portfolio-modal-image">
+                    <img src="${item.image}" alt="${item.title}">
+                </div>
+                <div class="portfolio-modal-details">
+                    <span class="badge">${item.tag}</span>
+                    <h2>${item.title}</h2>
+                    <p>${item.desc}</p>
+                    ${listHtml ? `
+                    <h4>Что было сделано:</h4>
+                    <ul class="benefits-list" style="margin-top:0;">
+                        ${listHtml}
+                    </ul>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    this.openModal(html);
+  },
+
   openVideoModal(id, title) {
     const html = `
             <h3 style="margin-bottom: 20px;">${title}</h3>
@@ -463,43 +514,6 @@ const app = {
             </div>
         `;
     this.openModal(html);
-  },
-
-  openArticle(id) {
-    // Меняем URL (но без перезагрузки)
-    window.location.hash = 'article-' + id;
-    state.currentRoute = 'article';
-
-    // Очищаем активное меню
-    this.$navLinks.forEach(link => link.classList.remove('active'));
-
-    // Ищем и вставляем шаблон статьи (на полный экран, вместо модалки)
-    const template = document.getElementById('tpl-article');
-    if (template) {
-      const content = template.content.cloneNode(true);
-      this.$appContent.innerHTML = '';
-      content.firstElementChild.classList.add('fade-in');
-      this.$appContent.appendChild(content);
-      window.scrollTo(0, 0);
-
-      // Загружаем данные статьи (в реальности тут будет fetch по id)
-      const articleContent = document.getElementById('article-content');
-      const articleTitle = document.getElementById('article-title');
-      const articleMeta = document.getElementById('article-meta');
-
-      setTimeout(() => {
-        const article = state.articles.find(a => a.id === id);
-        if (article) {
-          articleTitle.textContent = article.title;
-          articleMeta.innerHTML = `<span class="badge" aria-label="Категория">${article.category}</span>
-                                             <span class="read-time" style="margin-left: 15px;"><i class='bx bx-time-five' aria-hidden="true"></i> ${article.readTime}</span>`;
-          articleContent.innerHTML = article.content || '<p>Текст статьи не найден.</p>';
-        } else {
-          articleContent.innerHTML = '<p class="error">Статья не найдена или была удалена.</p>';
-          articleTitle.textContent = 'Ошибка загрузки';
-        }
-      }, 400); // симуляция загрузки
-    }
   },
 
   // ----------------------------------------------------
@@ -561,72 +575,83 @@ const app = {
   },
 
   // ----------------------------------------------------
-  // Виджет Telegram
+  // Виджет Telegram (Chat)
   // ----------------------------------------------------
-  async handleTgSubmit(e) {
-    e.preventDefault();
+  async handleChatSubmit(e) {
+    if (e) e.preventDefault();
 
-    const btn = document.getElementById('tg-submit-btn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Отправка...';
+    const message = this.$tgChatInput.value.trim();
+    if (!message) return;
+
+    // Добавляем сообщение пользователя в интерфейс
+    this.addChatMessage(message, 'user');
+    this.$tgChatInput.value = '';
+
+    const btn = this.$tgChatSubmit;
+    const originalIcon = btn.innerHTML;
+    btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i>';
     btn.disabled = true;
-
-    const formData = new FormData(this.$tgWidgetForm);
-    const data = {
-      name: formData.get('name'),
-      contact: formData.get('contact'),
-      message: formData.get('message')
-    };
+    this.$tgChatInput.disabled = true;
 
     try {
-      const response = await fetch(N8N_WEBHOOKS.telegramContact, {
+      const response = await fetch(N8N_WEBHOOKS.aiChat, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify({ message: message }) // Передаем сообщение
       });
 
-      // Считаем успешным любой ответ, так как n8n webhook обычно возвращает 200
       if (response.ok) {
-        this.$tgWidgetForm.style.display = 'none';
-        if (this.$tgWidgetWindow.querySelector('.tg-widget-body > p')) {
-          this.$tgWidgetWindow.querySelector('.tg-widget-body > p').style.display = 'none';
+        // Пробуем распарсить JSON ответ. Если n8n возвращает текст или пустоту, обрабатываем это.
+        let reply = '';
+        try {
+          const data = await response.json();
+          // Ожидаем поле reply или output от n8n, иначе берем текст целиком
+          reply = data.reply || data.output || data.message || 'Сообщение доставлено. Оператор скоро ответит.';
+        } catch (jsonErr) {
+          reply = 'Сообщение доставлено. Оператор скоро ответит.';
         }
-        this.$tgWidgetSuccess.classList.remove('hidden');
 
-        // Очистка формы для будущего
-        setTimeout(() => {
-          this.$tgWidgetForm.reset();
-          this.$tgWidgetForm.style.display = 'block';
-          if (this.$tgWidgetWindow.querySelector('.tg-widget-body > p')) {
-            this.$tgWidgetWindow.querySelector('.tg-widget-body > p').style.display = 'block';
-          }
-          this.$tgWidgetSuccess.classList.add('hidden');
-          this.$tgWidgetWindow.classList.add('hidden');
-        }, 5000);
+        this.addChatMessage(reply, 'bot');
       } else {
         throw new Error('Network response was not ok');
       }
     } catch (error) {
-      console.error('Ошибка отправки формы:', error);
-      this.$tgWidgetForm.style.display = 'none';
-      if (this.$tgWidgetWindow.querySelector('.tg-widget-body > p')) {
-        this.$tgWidgetWindow.querySelector('.tg-widget-body > p').style.display = 'none';
-      }
-      this.$tgWidgetError.classList.remove('hidden');
-
-      setTimeout(() => {
-        this.$tgWidgetForm.style.display = 'block';
-        if (this.$tgWidgetWindow.querySelector('.tg-widget-body > p')) {
-          this.$tgWidgetWindow.querySelector('.tg-widget-body > p').style.display = 'block';
-        }
-        this.$tgWidgetError.classList.add('hidden');
-      }, 5000);
+      console.error('Ошибка отправки сообщения:', error);
+      this.addChatMessage('Произошла ошибка связи с сервером. Попробуйте позже.', 'bot');
     } finally {
-      btn.innerHTML = originalText;
+      btn.innerHTML = originalIcon;
       btn.disabled = false;
+      this.$tgChatInput.disabled = false;
+      this.$tgChatInput.focus();
     }
+  },
+
+  addChatMessage(text, sender) {
+    if (!this.$tgChatHistory) return;
+
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `tg-message ${sender}`;
+    msgDiv.innerHTML = `<div class="msg-bubble">${this.escapeHTML(text)}</div>`;
+
+    this.$tgChatHistory.appendChild(msgDiv);
+
+    // Скролл вниз к новому сообщению
+    this.$tgChatHistory.scrollTop = this.$tgChatHistory.scrollHeight;
+  },
+
+  escapeHTML(str) {
+    if (typeof str !== 'string') return str;
+    return str.replace(/[&<>'"]/g,
+      tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      }[tag] || tag)
+    );
   }
 };
 
