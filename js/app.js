@@ -10,15 +10,25 @@ const N8N_WEBHOOKS = {
   video: 'https://your-n8n-domain.com/webhook/get-video',
   portfolio: 'https://your-n8n-domain.com/webhook/get-portfolio',
   createPayment: 'https://your-n8n-domain.com/webhook/create-payment',
-  aiChat: 'https://n8n.soedmi.ru/webhook/ai-chat' // ЗАМЕНИТЬ НА СВОЙ ВЕБХУК
+  aiChat: 'https://n8n.soedmi.ru/webhook-test/ai-chat' // ЗАМЕНИТЬ НА СВОЙ ВЕБХУК
 };
+
+// Генерируем или получаем sessionId для чата
+function getChatSessionId() {
+  let sessionId = localStorage.getItem('tg_chat_session_id');
+  if (!sessionId) {
+    sessionId = 'sess_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+    localStorage.setItem('tg_chat_session_id', sessionId);
+  }
+  return sessionId;
+}
 
 // Состояние приложения
 const state = {
   currentRoute: 'home',
-  cart: [],
   templates: [],
-  portfolio: []
+  portfolio: [],
+  sessionId: getChatSessionId() // ID сессии для ИИ
 };
 
 // Главный контроллер приложения
@@ -35,8 +45,6 @@ const app = {
     } else {
       this.renderRoute('home');
     }
-
-    this.updateCartBadge();
 
     // Cookie Popup
     const cookiePopup = document.getElementById('cookie-popup');
@@ -378,7 +386,7 @@ const app = {
                     </div>
                     <div class="product-footer">
                         <span class="price" aria-label="Цена">${item.price}</span>
-                        <button class="btn btn-primary btn-glow" onclick="event.stopPropagation(); app.buyTemplate(${item.id}, '${item.title}')" aria-label="Купить ${item.title}">
+                        <button class="btn btn-primary btn-glow" onclick="event.stopPropagation(); app.buyTemplate(${item.id}, '${item.title.replace(/'/g, "\\'")}')" aria-label="Купить ${item.title}">
                             <i class='bx bx-credit-card' aria-hidden="true"></i> Купить
                         </button>
                     </div>
@@ -469,7 +477,7 @@ const app = {
                     </div>
                     <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 24px; border-top: 1px solid var(--border-color);">
                         <span class="price" aria-label="Цена" style="font-size: 2rem; font-weight: 700;">${item.price}</span>
-                        <button class="btn btn-primary btn-glow" onclick="app.buyTemplate(${item.id}, '${item.title}')" aria-label="Купить ${item.title}">
+                        <button class="btn btn-primary btn-glow" onclick="app.buyTemplate(${item.id}, '${item.title.replace(/'/g, "\\'")}')" aria-label="Купить ${item.title}">
                             <i class='bx bx-credit-card' aria-hidden="true"></i> Купить шаблон
                         </button>
                     </div>
@@ -563,17 +571,6 @@ const app = {
     }
   },
 
-  updateCartBadge() {
-    const badge = document.querySelector('.cart-badge');
-    if (badge) {
-      badge.textContent = state.cart.length;
-      if (state.cart.length > 0) {
-        badge.classList.add('pulse'); // Анимация при добавлении
-        setTimeout(() => badge.classList.remove('pulse'), 300);
-      }
-    }
-  },
-
   // ----------------------------------------------------
   // Виджет Telegram (Chat)
   // ----------------------------------------------------
@@ -599,7 +596,10 @@ const app = {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ message: message }) // Передаем сообщение
+        body: JSON.stringify({
+          message: message,
+          sessionId: state.sessionId
+        }) // Передаем сообщение и ID сессии
       });
 
       if (response.ok) {
@@ -608,9 +608,9 @@ const app = {
         try {
           const data = await response.json();
           // Ожидаем поле reply или output от n8n, иначе берем текст целиком
-          reply = data.reply || data.output || data.message || 'Сообщение доставлено. Оператор скоро ответит.';
+          reply = data.reply || data.output || data.message || 'На сервере произошла ошибка, попробуйте позднее.';
         } catch (jsonErr) {
-          reply = 'Сообщение доставлено. Оператор скоро ответит.';
+          reply = 'На сервере произошла ошибка, попробуйте позднее.';
         }
 
         this.addChatMessage(reply, 'bot');

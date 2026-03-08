@@ -236,26 +236,6 @@ a:hover {
   gap: 16px;
 }
 
-#cart-btn {
-  position: relative;
-  padding: 10px;
-}
-
-.cart-badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background-color: var(--accent-primary);
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 700;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 
 .menu-toggle {
   display: none;
