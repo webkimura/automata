@@ -87,8 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     draw() {
-      // Цвет частицы (акцентный n8n - #ff6d5a)
-      ctx.fillStyle = 'rgba(255, 109, 90, 0.5)';
+      // Цвет частицы (акцентный n8n - #1bd5cc)
+      ctx.fillStyle = 'rgba(27, 213, 204, 0.5)';
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
       ctx.fill();
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dist < 14400) {
           let opacity = 1 - (dist / 14400);
           // Линии более прозрачные, чем сами точки
-          ctx.strokeStyle = `rgba(255, 109, 90, ${opacity * 0.25})`;
+          ctx.strokeStyle = `rgba(27, 213, 204, ${opacity * 0.25})`;
           ctx.beginPath();
           ctx.moveTo(particles[i].x, particles[i].y);
           ctx.lineTo(particles[j].x, particles[j].y);

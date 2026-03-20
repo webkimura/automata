@@ -1,12 +1,11 @@
 /**
  * Основной скрипт приложения (SPA)
- * Управляет навигацией, загрузкой контента из n8n и корзиной.
+ * Управляет навигацией и загрузкой контента из n8n.
  */
 
 // URL вебхуков n8n (заменить их на свои)
 const N8N_WEBHOOKS = {
   templates: 'https://n8n.soedmi.ru/webhook/get-templates',
-  news: 'https://your-n8n-domain.com/webhook/get-news',
   video: 'https://your-n8n-domain.com/webhook/get-video',
   portfolio: 'https://your-n8n-domain.com/webhook/get-portfolio',
   createPayment: 'https://your-n8n-domain.com/webhook/create-payment',
@@ -190,7 +189,6 @@ const app = {
 
       // Если раздел требует загрузки данных - вызываем соответствующий метод
       if (route === 'templates') this.loadTemplates();
-      if (route === 'news') this.loadNews();
       if (route === 'portfolio') this.loadPortfolio();
       if (route === 'video') this.loadVideos();
 
@@ -210,8 +208,8 @@ const app = {
   updateSEO(route) {
     const seoData = {
       home: {
-        title: 'n8nStore — Шаблоны, Услуги и Гайды по Автоматизации',
-        desc: 'Готовые шаблоны n8n, услуги по автоматизации бизнеса, подробные гайды по интеграции сервисов и обучающие видео.'
+        title: 'n8nStore — Шаблоны, Услуги и Кейсы по Автоматизации',
+        desc: 'Готовые шаблоны n8n, услуги по автоматизации бизнеса, подробные кейсы по интеграции сервисов и обучающие видео.'
       },
       services: {
         title: 'Услуги по автоматизации бизнеса на n8n | n8nStore',
@@ -224,10 +222,6 @@ const app = {
       portfolio: {
         title: 'Наши кейсы и проекты автоматизации | n8nStore',
         desc: 'Реализованные проекты по автоматизации бизнеса, интеграции сервисов и разработке ботов.'
-      },
-      news: {
-        title: 'Новости магазина и обновления n8n | n8nStore',
-        desc: 'Свежие обновления платформы n8n, новые возможности сервиса и релизы новых шаблонов.'
       },
       video: {
         title: 'Обучающие видео уроки по n8n | n8nStore',
@@ -291,20 +285,6 @@ const app = {
       grid.innerHTML = '<div class="loader error">Ошибка при загрузке шаблонов. Проверьте настройки n8n.</div>';
       console.error(error);
     }
-  },
-
-  async loadNews() {
-    const timeline = document.getElementById('news-timeline');
-    // По аналогии - тут будет fetch к n8n webhook
-    timeline.innerHTML = '<div class="loader"><i class="bx bx-loader-alt bx-spin"></i> Подгрузка новостей...</div>';
-    setTimeout(() => {
-      const mockNews = [
-        { id: 101, date: '24 Февраля 2026', title: 'Обновление шаблона Telegram Бота', content: 'Добавлена поддержка новых моделей нейронных сетей и улучшена обработка длительного контекста разговора. Скачайте новую версию в личном кабинете.' },
-        { id: 102, date: '20 Февраля 2026', title: 'Как интегрировать ЮKassa в n8n', content: 'Опубликован новый подробный гайд по настройке приема платежей в ваших сценариях. Разбираем создание инвойсов и вебхуки.' },
-        { id: 103, date: '15 Февраля 2026', title: 'Запуск магазина!', content: 'Добро пожаловать в наш новый магазин шаблонов n8n. Мы подготовили для вас лучшие решения для автоматизации рутины.' }
-      ];
-      this.renderItems(timeline, mockNews, 'news');
-    }, 500);
   },
 
   async loadPortfolio() {
@@ -392,16 +372,6 @@ const app = {
                     </div>
                 </article>
             `).join('');
-    } else if (type === 'news') {
-      html = items.map(item => `
-                <article class="news-item glass-panel fade-in">
-                    <div class="news-date"><i class='bx bx-calendar' aria-hidden="true"></i> <time>${item.date}</time></div>
-                    <h3>${item.title}</h3>
-                    <p>${item.content}</p>
-                </article>
-            `).join('');
-      // wrap with list manually to match older layout
-      html = `<div class="news-list">${html}</div>`;
     } else if (type === 'portfolio') {
       html = items.map(item => `
                 <article class="portfolio-card glass-panel fade-in" onclick="app.openPortfolioModal(${item.id})">
@@ -525,7 +495,7 @@ const app = {
   },
 
   // ----------------------------------------------------
-  // Оплата и Корзина
+  // Оплата
   // ----------------------------------------------------
 
   // Прямая покупка товара через ЮKassa (запрос в n8n)
