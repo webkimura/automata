@@ -8,7 +8,7 @@ const N8N_WEBHOOKS = {
   templates: 'https://n8n.soedmi.ru/webhook/get-templates',
   video: 'https://your-n8n-domain.com/webhook/get-video',
   portfolio: 'https://your-n8n-domain.com/webhook/get-portfolio',
-  createPayment: 'https://your-n8n-domain.com/webhook/create-payment',
+  createPayment: 'https://n8n.soedmi.ru/webhook/create-payment',
   aiChat: 'https://n8n.soedmi.ru/webhook-test/ai-chat' // ЗАМЕНИТЬ НА СВОЙ ВЕБХУК
 };
 
@@ -366,7 +366,7 @@ const app = {
                     </div>
                     <div class="product-footer">
                         <span class="price" aria-label="Цена">${item.price}</span>
-                        <button class="btn btn-primary btn-glow" onclick="event.stopPropagation(); app.buyTemplate(${item.id}, '${item.title.replace(/'/g, "\\'")}')" aria-label="Купить ${item.title}">
+                        <button class="btn btn-primary btn-glow" onclick="event.stopPropagation(); app.openCheckoutModal(${item.id}, '${item.title.replace(/'/g, "\\'")}')" aria-label="Купить ${item.title}">
                             <i class='bx bx-credit-card' aria-hidden="true"></i> Купить
                         </button>
                     </div>
@@ -447,7 +447,7 @@ const app = {
                     </div>
                     <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 24px; border-top: 1px solid var(--border-color);">
                         <span class="price" aria-label="Цена" style="font-size: 2rem; font-weight: 700;">${item.price}</span>
-                        <button class="btn btn-primary btn-glow" onclick="app.buyTemplate(${item.id}, '${item.title.replace(/'/g, "\\'")}')" aria-label="Купить ${item.title}">
+                        <button class="btn btn-primary btn-glow" onclick="app.openCheckoutModal(${item.id}, '${item.title.replace(/'/g, "\\'")}')" aria-label="Купить ${item.title}">
                             <i class='bx bx-credit-card' aria-hidden="true"></i> Купить шаблон
                         </button>
                     </div>
@@ -498,44 +498,63 @@ const app = {
   // Оплата
   // ----------------------------------------------------
 
-  // Прямая покупка товара через ЮKassa (запрос в n8n)
-  async buyTemplate(id, title) {
+  // Вызов формы ввода Email перед оплатой
+  openCheckoutModal(id, title) {
+    const html = `
+      <div style="padding: 10px; text-align: center; max-width: 400px; margin: 0 auto;">
+          <h3 style="margin-bottom: 15px;">Оформление заказа</h3>
+          <p style="margin-bottom: 20px; color: var(--accent-primary); font-weight: bold;">${title}</p>
+          <p style="margin-bottom: 20px; font-size: 0.95rem; color: var(--text-muted);">Укажите почту. Сразу после оплаты туда придет ссылка для скачивания файла.</p>
+          
+          <form id="checkout-form" onsubmit="app.processCheckout(event, ${id}, '${title.replace(/'/g, "\\'")}')">
+              <div class="form-group" style="text-align: left; margin-bottom: 20px;">
+                  <input type="email" id="checkout-email" required placeholder="Введите ваш Email" style="width: 100%; padding: 14px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: #fff; font-size: 1rem;">
+              </div>
+              <button type="submit" id="checkout-submit-btn" class="btn btn-primary btn-glow" style="width: 100%; justify-content: center;">
+                  <i class='bx bx-credit-card' aria-hidden="true"></i> Перейти к оплате
+              </button>
+          </form>
+      </div>
+    `;
+    this.openModal(html);
+  },
+
+  // Прямая покупка товара через ЮKassa
+  async processCheckout(e, id, title) {
+    e.preventDefault();
+    const emailInput = document.getElementById('checkout-email');
+    if (!emailInput) return;
+
+    const email = emailInput.value.trim();
+    if (!email) return;
+
     // Показываем индикатор загрузки на кнопке
-    const btn = event.currentTarget;
+    const btn = document.getElementById('checkout-submit-btn');
     const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Обработка...';
+    btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Подготовка платежа...';
     btn.disabled = true;
 
     try {
-      // В реальном проекте здесь будет POST запрос на вебхук n8n, 
-      // который создаст платеж в ЮKassa и вернет ссылку
-
-      /*
       const response = await fetch(N8N_WEBHOOKS.createPayment, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ templateId: id, title: title })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ templateId: id, title: title, email: email })
       });
-      const data = await response.json();
-      
-      if (data.confirmationUrl) {
-          // Перенаправляем пользователя на страницу оплаты ЮKassa
-          window.location.href = data.confirmationUrl;
-      } else {
-          throw new Error('Не получена ссылка на оплату');
-      }
-      */
 
-      // Симуляция задержки ответа сервера ЮKassa
-      setTimeout(() => {
-        alert(`Демо: Перенаправление на оплату шаблона "${title}" в ЮKassa...`);
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-      }, 1500);
+      const data = await response.json();
+
+      // Ищем ссылку от ЮKassa
+      if (data.confirmationUrl) {
+        window.location.href = data.confirmationUrl;
+      } else if (data[0] && data[0].confirmationUrl) {
+        window.location.href = data[0].confirmationUrl;
+      } else {
+        throw new Error('Не получена ссылка на оплату');
+      }
 
     } catch (error) {
       console.error('Ошибка оплаты:', error);
-      alert('Произошла ошибка при инициализации платежа. Попробуйте позже.');
+      alert('Произошла ошибка при инициализации платежа. Убедитесь, что n8n запущен и отвечает.');
       btn.innerHTML = originalText;
       btn.disabled = false;
     }
