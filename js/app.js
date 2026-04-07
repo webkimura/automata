@@ -6,7 +6,7 @@
 // URL вебхуков n8n (заменить их на свои)
 const N8N_WEBHOOKS = {
   templates: 'https://n8n.soedmi.ru/webhook/get-templates',
-  video: 'https://your-n8n-domain.com/webhook/get-video',
+  video: 'https://n8n.soedmi.ru/webhook/get-video',
   portfolio: 'https://your-n8n-domain.com/webhook/get-portfolio',
   createPayment: 'https://n8n.soedmi.ru/webhook/create-payment',
   aiChat: 'https://n8n.soedmi.ru/webhook-test/ai-chat' // ЗАМЕНИТЬ НА СВОЙ ВЕБХУК
@@ -290,62 +290,65 @@ const app = {
   async loadPortfolio() {
     const grid = document.getElementById('portfolio-grid');
     if (!grid) return;
-    grid.innerHTML = '<div class="loader"><i class="bx bx-loader-alt bx-spin"></i> Подгрузка проектов...</div>';
-    setTimeout(() => {
-      const mockPortfolio = [
-        {
-          id: 1,
-          title: 'Telegram-бот для службы поддержки',
-          tag: 'Коммуникации',
-          image: 'https://placehold.co/600x400/222/FFF?text=Support+Bot',
-          desc: 'Автоматизированная система приема обращений с ChatGPT и сохранением в Google Sheets.',
-          features: [
-            'Интеграция с OpenAI',
-            'Синхронизация с базой данных',
-            'Маршрутизация к операторам'
-          ]
-        },
-        {
-          id: 2,
-          title: 'Автоматизация отдела продаж',
-          tag: 'CRM',
-          image: 'https://placehold.co/600x400/222/FFF?text=Sales+CRM',
-          desc: 'Связка AmoCRM с телефонией и автоматическими рассылками коммерческих предложений.',
-          features: [
-            'Настройка триггерных писем',
-            'Генерация PDF-документов',
-            'Уведомления менеджерам в Slack'
-          ]
-        },
-        {
-          id: 3,
-          title: 'Парсер конкурентов с уведомлениями',
-          tag: 'Данные',
-          image: 'https://placehold.co/600x400/222/FFF?text=Data+Scraper',
-          desc: 'Ежедневный сбор цен с 5 сайтов конкурентов, анализ и сводный отчет в Telegram.',
-          features: [
-            'Обход капчи и Cloudflare',
-            'Сравнение цен в реальном времени',
-            'Форматированный отчет в мессенджер'
-          ]
+
+    try {
+      grid.innerHTML = '<div class="loader"><i class="bx bx-loader-alt bx-spin"></i> Подгрузка проектов...</div>';
+
+      const response = await fetch(N8N_WEBHOOKS.portfolio);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      let data = await response.json();
+
+      // Убедимся, что данные - массив
+      if (!Array.isArray(data)) {
+        data = [data];
+      }
+
+      // Парсим JSON строку features, если она пришла из БД как строка
+      data = data.map(item => {
+        if (typeof item.features === 'string') {
+          try {
+            item.features = JSON.parse(item.features);
+          } catch (e) {
+            item.features = [];
+          }
         }
-      ];
-      state.portfolio = mockPortfolio;
-      this.renderItems(grid, mockPortfolio, 'portfolio');
-    }, 500);
+        return item;
+      });
+
+      state.portfolio = data;
+      this.renderItems(grid, data, 'portfolio');
+
+    } catch (error) {
+      grid.innerHTML = '<div class="loader error">Ошибка при загрузке проектов. Убедитесь, что вебхук n8n работает.</div>';
+      console.error(error);
+    }
   },
 
   async loadVideos() {
     const grid = document.getElementById('video-grid');
-    grid.innerHTML = '<div class="loader"><i class="bx bx-loader-alt bx-spin"></i> Подгрузка видео...</div>';
-    setTimeout(() => {
-      const mockVideos = [
-        { id: 'dQw4w9WgXcQ', title: '1. Быстрый старт в n8n за 10 минут' },
-        { id: 'jNQXAC9IVRw', title: '2. Подключение Telegram Bot API' },
-        { id: 'kJQP7kiw5Fk', title: '3. Интеграция с Google Sheets' }
-      ];
-      this.renderItems(grid, mockVideos, 'video');
-    }, 500);
+    if (!grid) return;
+
+    try {
+      grid.innerHTML = '<div class="loader"><i class="bx bx-loader-alt bx-spin"></i> Подгрузка видео...</div>';
+
+      const response = await fetch(N8N_WEBHOOKS.video);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      let data = await response.json();
+
+      if (!Array.isArray(data)) {
+        data = [data];
+      }
+
+      this.renderItems(grid, data, 'video');
+
+    } catch (error) {
+      grid.innerHTML = '<div class="loader error">Ошибка при загрузке видео. Убедитесь, что вебхук n8n работает.</div>';
+      console.error(error);
+    }
   },
 
   // Универсальный рендер списка
