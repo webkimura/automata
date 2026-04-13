@@ -628,6 +628,7 @@ a:hover {
   margin-bottom: 24px;
   font-size: 1.1rem;
   line-height: 1.6;
+  text-align: justify;
 }
 
 .portfolio-modal-details h4 {
@@ -789,6 +790,20 @@ a:hover {
 
 .modal-close:hover {
   color: var(--accent-primary);
+}
+
+/* Специфично для видео-модалки */
+.modal-content.video-modal {
+  max-width: 1000px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.modal-content.video-modal .modal-close {
+  top: -40px;
+  right: 0px;
 }
 
 /* Адаптивность (Медиа запросы) */

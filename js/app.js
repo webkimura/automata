@@ -7,9 +7,9 @@
 const N8N_WEBHOOKS = {
   templates: 'https://n8n.soedmi.ru/webhook/get-templates',
   video: 'https://n8n.soedmi.ru/webhook/get-video',
-  portfolio: 'https://your-n8n-domain.com/webhook/get-portfolio',
+  portfolio: 'https://n8n.soedmi.ru/webhook/get-portfolio',
   createPayment: 'https://n8n.soedmi.ru/webhook/create-payment',
-  aiChat: 'https://n8n.soedmi.ru/webhook-test/ai-chat' // ЗАМЕНИТЬ НА СВОЙ ВЕБХУК
+  aiChat: 'https://n8n.soedmi.ru/webhook/ai-chat' // ЗАМЕНИТЬ НА СВОЙ ВЕБХУК
 };
 
 // Генерируем или получаем sessionId для чата
@@ -67,6 +67,7 @@ const app = {
 
     // Модальное окно
     this.$modalOverlay = document.getElementById('modal-overlay');
+    this.$modalContent = document.getElementById('modal-content');
     this.$modalClose = document.getElementById('modal-close');
     this.$modalBody = document.getElementById('modal-body');
 
@@ -78,7 +79,6 @@ const app = {
     this.$tgChatInput = document.getElementById('tg-chat-input');
     this.$tgChatHistory = document.getElementById('tg-chat-history');
     this.$tgChatSubmit = document.getElementById('tg-chat-submit');
-    this.$footerContactsBtn = document.getElementById('footer-contacts-btn');
   },
 
   bindEvents() {
@@ -115,10 +115,6 @@ const app = {
       this.$tgWidgetClose.addEventListener('click', () => {
         this.$tgWidgetWindow.classList.add('hidden');
       });
-
-      if (this.$footerContactsBtn) {
-        this.$footerContactsBtn.addEventListener('click', openWidget);
-      }
     }
 
     if (this.$tgChatForm) {
@@ -139,14 +135,6 @@ const app = {
         this.closeModal();
       }
     });
-  },
-
-  // Глобальный метод для открытия виджета Telegram
-  openTgWidget(e) {
-    if (e) e.preventDefault();
-    if (this.$tgWidgetWindow) {
-      this.$tgWidgetWindow.classList.remove('hidden');
-    }
   },
 
   // Метод навигации
@@ -305,13 +293,17 @@ const app = {
         data = [data];
       }
 
-      // Парсим JSON строку features, если она пришла из БД как строка
       data = data.map(item => {
+        // Если n8n вернул данные в своей стандартной обертке { json: { ... } }
+        if (item.json) {
+          item = item.json;
+        }
+
         if (typeof item.features === 'string') {
           try {
             item.features = JSON.parse(item.features);
           } catch (e) {
-            item.features = [];
+            item.features = item.features.split('\n').filter(f => f.trim().length > 0);
           }
         }
         return item;
@@ -382,9 +374,6 @@ const app = {
                         <img src="${item.image}" alt="Превью ${item.title}">
                     </div>
                     <div class="portfolio-info">
-                        <div class="portfolio-meta">
-                            <span class="badge" aria-label="Категория: ${item.tag}">${item.tag}</span>
-                        </div>
                         <h3>${item.title}</h3>
                     </div>
                 </article>
@@ -422,6 +411,9 @@ const app = {
   closeModal() {
     if (!this.$modalOverlay) return;
     this.$modalOverlay.classList.add('hidden');
+    if (this.$modalContent) {
+      this.$modalContent.classList.remove('video-modal');
+    }
     setTimeout(() => { if (this.$modalBody) this.$modalBody.innerHTML = ''; }, 300); // clear content & kill iframes
     document.body.style.overflow = '';
   },
@@ -472,7 +464,6 @@ const app = {
                     <img src="${item.image}" alt="${item.title}">
                 </div>
                 <div class="portfolio-modal-details">
-                    <span class="badge">${item.tag}</span>
                     <h2>${item.title}</h2>
                     <p>${item.desc}</p>
                     ${listHtml ? `
@@ -488,10 +479,12 @@ const app = {
   },
 
   openVideoModal(id, title) {
+    if (this.$modalContent) {
+      this.$modalContent.classList.add('video-modal');
+    }
     const html = `
-            <h3 style="margin-bottom: 20px;">${title}</h3>
-            <div class="video-preview" style="cursor: auto;">
-                <iframe width="100%" height="100%" src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0" title="${title}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position: absolute; top:0; left:0; width:100%; height:100%; border-radius: 12px;"></iframe>
+            <div class="video-preview" style="cursor: auto; border-radius: var(--radius-lg); overflow: hidden;">
+                <iframe width="100%" height="100%" src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0" title="${title}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position: absolute; top:0; left:0; width:100%; height:100%;"></iframe>
             </div>
         `;
     this.openModal(html);
